@@ -1,8 +1,4 @@
-from django.contrib.admin import action
 from django.utils import timezone
-from django.shortcuts import render
-from rest_framework import generics,viewsets
-from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -10,16 +6,16 @@ from restaurant.models import Restaurant,Menu,MenuItem
 from restaurant.serializers import MenuSerializer, MenuItemSerializer, RestaurantSerializer
 
 
-# Create your views here.
-
 class Menulist(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = MenuSerializer
     queryset = Menu.objects.all()
     def get(self, request,pk=None):
         today = timezone.now().date()
-        if pk is None:
+        if pk is None: #Чи йде пошук за id меню
             menus = Menu.objects.filter(menu_date=today)
+            if not menus.exists():
+                return Response({"detail": "No menus available for today yet!"}, status=404)
             if menus.count() > 1:
                 serializer = MenuSerializer(menus, many=True)
             else:
@@ -32,11 +28,11 @@ class Menulist(APIView):
     def post(self, request):
         serializer = MenuSerializer(data=request.data)
         categories = request.data.pop('categories', [])
-        if serializer.is_valid():
+        if serializer.is_valid(): #збереження menu
             menu=serializer.save()
         else:
             return Response(serializer.errors)
-        for category in categories:
+        for category in categories: #окреме збереження кожної позиції меню
             items = category['items']
             for item in items:
                 item['menu'] = menu.id
@@ -54,6 +50,8 @@ class RestaurantListAPI(APIView):
     def get(self, request,pk=None):
         if pk is None:
             restaurants = Restaurant.objects.all()
+            if not restaurants.exists():
+                return Response({"detail": " No restaurants available"}, status=404)
             serializer = RestaurantSerializer(restaurants, many=True)
         else:
             restaurants = Restaurant.objects.get(id=pk)

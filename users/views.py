@@ -18,9 +18,13 @@ class VoteListView(APIView):
         today = timezone.now().date()
         if not pk:
             votes = Vote.objects.filter(date__date=today)
+            if not votes.exists():
+                return Response({"detail": "No votes available for today yet!"}, status=404)
             return Response(VoteSerializer(votes,many=True).data)
         else:
             votes = Vote.objects.filter(user=pk,date__date=today)
+        if not votes.exists():
+            return Response({"detail": "No votes available for today yet!"}, status=404)
         return Response(VoteSerializer(votes,many=True).data)
     def post(self,request):
         serializer = VoteSerializer(data=request.data)
