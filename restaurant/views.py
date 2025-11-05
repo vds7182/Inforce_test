@@ -12,9 +12,9 @@ class Menulist(APIView):
     queryset = Menu.objects.all()
     def get(self, request,pk=None):
         today = timezone.now().date()
-        if pk is None: #Чи йде пошук за id меню
+        if pk is None: #Check if there's a PK-based menu search
             menus = Menu.objects.filter(menu_date=today)
-            if not menus.exists():
+            if not menus.exists(): #"Object" does not exist" error handling
                 return Response({"detail": "No menus available for today yet!"}, status=404)
             if menus.count() > 1:
                 serializer = MenuSerializer(menus, many=True)
@@ -28,11 +28,11 @@ class Menulist(APIView):
     def post(self, request):
         serializer = MenuSerializer(data=request.data)
         categories = request.data.pop('categories', [])
-        if serializer.is_valid(): #збереження menu
+        if serializer.is_valid(): #saving menu into DB
             menu=serializer.save()
         else:
             return Response(serializer.errors)
-        for category in categories: #окреме збереження кожної позиції меню
+        for category in categories: #saving each menu position into DB
             items = category['items']
             for item in items:
                 item['menu'] = menu.id

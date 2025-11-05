@@ -16,7 +16,7 @@ class MenuSerializer(serializers.ModelSerializer):
     class Meta:
         model = Menu
         fields = '__all__'
-    def get_categories(self,obj): #"Збірка" інформації в формат JSON зменю та її позицій
+    def get_categories(self,obj): #"Assembling" JSON file from menu and it dishes
         items=MenuItem.objects.filter(menu=obj.id)
         grouped=defaultdict(list)
         for item in items:
